@@ -1,0 +1,44 @@
+version: "3"
+
+services:
+  zabbix-server:
+    image: zabbix/zabbix-server-pgsql:alpine-5.0-latest
+    ports:
+      - 10051:10051
+    environment:
+      - POSTGRES_USER=zabbix
+      - POSTGRES_PASSWORD=zabbix
+      - ZBX_STARTTRAPPERS=0
+      - ZBX_STARTJAVAPOLLERS=0
+      - ZBX_CACHESIZE=128M
+    depends_on:
+      - postgres-server
+
+  zabbix-web-nginx-pgsql:
+    image: zabbix/zabbix-web-nginx-pgsql:alpine-5.0-latest
+    ports:
+      - "8081:8080"
+      - "8443:8443"
+    environment:
+      - POSTGRES_USER=zabbix
+      - POSTGRES_PASSWORD=zabbix
+      - ZBX_SERVER_HOST=zabbix-server
+      - ZBX_SERVER_PORT=10051
+      - ZBX_SERVER_NAME=Zabbix本机开发环境
+      - PHP_TZ=Asia/Shanghai
+    depends_on:
+      - postgres-server
+      - zabbix-server
+
+  postgres-server:
+    image: postgres:12-alpine
+    volumes:
+      - zbxdata:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=zabbix
+      - POSTGRES_PASSWORD=zabbix
+      - POSTGRES_DB=zabbix
+      - DB_SERVER_PORT=5432
+
+volumes:
+  zbxdata:
